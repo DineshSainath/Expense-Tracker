@@ -148,7 +148,9 @@ function App() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
           <div className="lg:col-span-1">
-            <ExpenseForm onAddExpense={handleAddExpense} />
+            <div className="flex-shrink-0">
+              <ExpenseForm onAddExpense={handleAddExpense} />
+            </div>
           </div>
           <div className="lg:col-span-2">
             <div className="grid grid-cols-1 gap-3 sm:gap-4">

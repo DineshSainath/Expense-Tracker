@@ -56,11 +56,11 @@ const ExpenseForm = ({ onAddExpense }) => {
   };
 
   return (
-    <Card className="h-full">
+    <Card className="overflow-hidden" style={{ height: "auto" }}>
       <CardHeader className="pb-2 sm:pb-3">
         <CardTitle className="text-lg sm:text-xl">Add New Expense</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pb-4">
         <form onSubmit={handleSubmit} className="space-y-2 sm:space-y-3">
           <div>
             <label

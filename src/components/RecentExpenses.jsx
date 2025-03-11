@@ -353,7 +353,7 @@ const RecentExpenses = ({ expenses, onUpdateExpense, onDeleteExpense }) => {
                             {expense.name}
                           </h4>
                           <div className="flex items-center mt-1">
-                            <span className="inline-block px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-800 capitalize">
+                            <span className="inline-block px-2 py-0.5 text-xs rounded-full bg-black text-white capitalize">
                               {expense.category}
                             </span>
                             <span className="text-xs text-gray-500 ml-2">
