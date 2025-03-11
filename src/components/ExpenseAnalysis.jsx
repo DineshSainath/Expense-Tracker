@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "./ui/card";
 import { Tabs, TabsTrigger } from "./ui/tabs";
 import {
@@ -11,36 +11,77 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  Text,
+  Legend,
 } from "recharts";
 
-const COLORS = ["#000000", "#333333", "#666666", "#999999"];
+// Base colors for predefined categories
+const BASE_COLORS = {
+  food: "#000000",
+  transport: "#333333",
+  entertainment: "#666666",
+  utilities: "#999999",
+  shopping: "#555555",
+};
+
+// Additional colors for dynamic categories
+const EXTRA_COLORS = ["#777777", "#888888", "#444444", "#222222", "#AAAAAA"];
 
 const ExpenseAnalysis = ({ expenses }) => {
   const [activeChart, setActiveChart] = useState("pie");
+  const [chartData, setChartData] = useState([]);
+  const [dataWithPercentage, setDataWithPercentage] = useState([]);
+  const [total, setTotal] = useState(0);
 
-  // Group expenses by category and calculate totals
-  const categoryTotals = expenses.reduce((acc, expense) => {
-    const category = expense.category;
-    if (!acc[category]) {
-      acc[category] = 0;
+  // Process expense data whenever expenses change
+  useEffect(() => {
+    // Group expenses by category and calculate totals
+    const categoryTotals = expenses.reduce((acc, expense) => {
+      const category = expense.category;
+      if (!acc[category]) {
+        acc[category] = 0;
+      }
+      acc[category] += expense.amount;
+      return acc;
+    }, {});
+
+    // Format data for charts
+    const formattedData = Object.entries(categoryTotals).map(
+      ([name, value]) => ({
+        name: name.charAt(0).toUpperCase() + name.slice(1),
+        value: parseFloat(value.toFixed(2)),
+        originalName: name, // Keep original name for color mapping
+      })
+    );
+
+    // Calculate total
+    const totalAmount = formattedData.reduce(
+      (sum, item) => sum + item.value,
+      0
+    );
+
+    // Calculate percentages for display
+    const dataWithPercentages = formattedData.map((item) => ({
+      ...item,
+      percentage:
+        totalAmount > 0 ? ((item.value / totalAmount) * 100).toFixed(1) : 0,
+    }));
+
+    setChartData(formattedData);
+    setDataWithPercentage(dataWithPercentages);
+    setTotal(totalAmount);
+  }, [expenses]);
+
+  // Generate color map for all categories (including custom ones)
+  const getCategoryColor = (category, index) => {
+    if (BASE_COLORS[category]) {
+      return BASE_COLORS[category];
     }
-    acc[category] += expense.amount;
-    return acc;
-  }, {});
+    // For custom categories, use extra colors in rotation
+    return EXTRA_COLORS[index % EXTRA_COLORS.length];
+  };
 
-  // Format data for charts
-  const chartData = Object.entries(categoryTotals).map(([name, value]) => ({
-    name: name.charAt(0).toUpperCase() + name.slice(1),
-    value: parseFloat(value.toFixed(2)),
-  }));
-
-  // Calculate percentages for display
-  const total = chartData.reduce((sum, item) => sum + item.value, 0);
-  const dataWithPercentage = chartData.map((item) => ({
-    ...item,
-    percentage: total > 0 ? ((item.value / total) * 100).toFixed(1) : 0,
-  }));
+  // Custom tooltip formatter to display rupee symbol
+  const formatTooltipValue = (value) => `₹${value.toFixed(2)}`;
 
   return (
     <Card className="h-full">
@@ -81,11 +122,11 @@ const ExpenseAnalysis = ({ expenses }) => {
                   {chartData.map((entry, index) => (
                     <Cell
                       key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]}
+                      fill={getCategoryColor(entry.originalName, index)}
                     />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value) => `$${value.toFixed(2)}`} />
+                <Tooltip formatter={formatTooltipValue} />
                 <text
                   x="50%"
                   y="48%"
@@ -93,7 +134,7 @@ const ExpenseAnalysis = ({ expenses }) => {
                   dominantBaseline="middle"
                   style={{ fontSize: "14px", fontWeight: "bold", fill: "#000" }}
                 >
-                  ${total.toFixed(2)}
+                  ₹{total.toFixed(2)}
                 </text>
                 <text
                   x="50%"
@@ -114,15 +155,23 @@ const ExpenseAnalysis = ({ expenses }) => {
                   left: 10,
                   bottom: 5,
                 }}
+                maxBarSize={40}
               >
-                <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                <XAxis
+                  dataKey="name"
+                  tick={{ fontSize: 12 }}
+                  interval={0}
+                  angle={-45}
+                  textAnchor="end"
+                  height={60}
+                />
                 <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip formatter={(value) => `$${value.toFixed(2)}`} />
+                <Tooltip formatter={formatTooltipValue} />
                 <Bar dataKey="value">
                   {chartData.map((entry, index) => (
                     <Cell
                       key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]}
+                      fill={getCategoryColor(entry.originalName, index)}
                     />
                   ))}
                 </Bar>
@@ -137,14 +186,16 @@ const ExpenseAnalysis = ({ expenses }) => {
               <div className="flex items-center justify-center mb-1">
                 <div
                   className="w-2 h-2 sm:w-3 sm:h-3 rounded-full mr-1 sm:mr-2"
-                  style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                  style={{
+                    backgroundColor: getCategoryColor(item.originalName, index),
+                  }}
                 ></div>
                 <span className="text-xs sm:text-sm font-medium">
                   {item.name}
                 </span>
               </div>
               <div className="text-base sm:text-lg md:text-xl font-bold">
-                ${item.value}
+                ₹{item.value}
               </div>
               <div className="text-xs sm:text-sm text-muted-foreground">
                 ({item.percentage}%)

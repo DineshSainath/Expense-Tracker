@@ -7,7 +7,15 @@ import { Button } from "./ui/button";
 const ExpenseForm = ({ onAddExpense }) => {
   const [expenseName, setExpenseName] = useState("");
   const [category, setCategory] = useState("food");
+  const [customCategory, setCustomCategory] = useState("");
   const [amount, setAmount] = useState("");
+  const [showCustomCategory, setShowCustomCategory] = useState(false);
+
+  const handleCategoryChange = (e) => {
+    const selectedCategory = e.target.value;
+    setCategory(selectedCategory);
+    setShowCustomCategory(selectedCategory === "other");
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -16,10 +24,19 @@ const ExpenseForm = ({ onAddExpense }) => {
       return;
     }
 
+    // Use custom category if "other" is selected
+    const finalCategory =
+      category === "other" ? customCategory.toLowerCase() : category;
+
+    // Validate that custom category is provided when "other" is selected
+    if (category === "other" && !customCategory.trim()) {
+      return;
+    }
+
     const newExpense = {
       id: Date.now(),
       name: expenseName,
-      category,
+      category: finalCategory,
       amount: parseFloat(amount),
       date: new Date().toISOString(),
     };
@@ -29,6 +46,8 @@ const ExpenseForm = ({ onAddExpense }) => {
     // Reset form
     setExpenseName("");
     setCategory("food");
+    setCustomCategory("");
+    setShowCustomCategory(false);
     setAmount("");
   };
 
@@ -65,15 +84,35 @@ const ExpenseForm = ({ onAddExpense }) => {
             <Select
               id="category"
               value={category}
-              onChange={(e) => setCategory(e.target.value)}
+              onChange={handleCategoryChange}
               className="text-sm h-8 sm:h-10"
             >
               <option value="food">Food</option>
               <option value="transport">Transport</option>
               <option value="entertainment">Entertainment</option>
               <option value="utilities">Utilities</option>
+              <option value="shopping">Shopping</option>
+              <option value="other">Other...</option>
             </Select>
           </div>
+
+          {showCustomCategory && (
+            <div>
+              <label
+                htmlFor="custom-category"
+                className="block text-xs sm:text-sm font-medium mb-1"
+              >
+                Custom Category
+              </label>
+              <Input
+                id="custom-category"
+                placeholder="Enter category name"
+                value={customCategory}
+                onChange={(e) => setCustomCategory(e.target.value)}
+                className="text-sm h-8 sm:h-10"
+              />
+            </div>
+          )}
 
           <div>
             <label
@@ -84,7 +123,7 @@ const ExpenseForm = ({ onAddExpense }) => {
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <span className="text-gray-500 text-xs sm:text-sm">$</span>
+                <span className="text-gray-500 text-xs sm:text-sm">₹</span>
               </div>
               <Input
                 id="amount"

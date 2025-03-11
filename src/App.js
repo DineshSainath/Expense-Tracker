@@ -32,6 +32,13 @@ const initialExpenses = [
     amount: 18.5,
     date: "2023-03-10T08:15:00Z",
   },
+  {
+    id: 5,
+    name: "New Shoes",
+    category: "shopping",
+    amount: 59.99,
+    date: "2023-03-11T15:20:00Z",
+  },
 ];
 
 function App() {
@@ -58,7 +65,13 @@ function App() {
     .reduce((sum, expense) => sum + expense.amount, 0);
 
   const handleAddExpense = (newExpense) => {
-    setExpenses([...expenses, newExpense]);
+    // Create a new array with the new expense to trigger re-render
+    const updatedExpenses = [...expenses, newExpense];
+    setExpenses(updatedExpenses);
+
+    // Log for debugging
+    console.log("Added new expense:", newExpense);
+    console.log("Updated expenses:", updatedExpenses);
   };
 
   return (
@@ -76,13 +89,13 @@ function App() {
 
           <div className="mt-3 sm:mt-0 flex flex-row sm:flex-row gap-2 sm:gap-3">
             <div className="bg-white rounded-lg border border-gray-100 shadow-sm p-2 sm:p-3 flex items-center flex-1 sm:flex-auto">
-              <span className="text-xl sm:text-2xl mr-2">$</span>
+              <span className="text-xl sm:text-2xl mr-2">₹</span>
               <div>
                 <p className="text-xs sm:text-sm text-muted-foreground">
                   Total:
                 </p>
                 <p className="text-lg sm:text-xl font-bold">
-                  ${totalExpenses.toFixed(2)}
+                  ₹{totalExpenses.toFixed(2)}
                 </p>
               </div>
             </div>
@@ -108,7 +121,7 @@ function App() {
                   Today:
                 </p>
                 <p className="text-lg sm:text-xl font-bold">
-                  ${todayExpenses.toFixed(2)}
+                  ₹{todayExpenses.toFixed(2)}
                 </p>
               </div>
             </div>
@@ -120,7 +133,7 @@ function App() {
             <ExpenseForm onAddExpense={handleAddExpense} />
           </div>
           <div className="lg:col-span-2">
-            <ExpenseAnalysis expenses={expenses} />
+            <ExpenseAnalysis key={expenses.length} expenses={expenses} />
           </div>
         </div>
       </div>
