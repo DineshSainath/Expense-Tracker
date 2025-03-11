@@ -67,11 +67,14 @@ function App() {
   const handleAddExpense = (newExpense) => {
     // Create a new array with the new expense to trigger re-render
     const updatedExpenses = [...expenses, newExpense];
-    setExpenses(updatedExpenses);
 
     // Log for debugging
     console.log("Added new expense:", newExpense);
-    console.log("Updated expenses:", updatedExpenses);
+    console.log("Category type:", typeof newExpense.category);
+    console.log("Updated expenses array length:", updatedExpenses.length);
+
+    // Force a state update by creating a completely new array
+    setExpenses([...expenses, newExpense]);
   };
 
   return (

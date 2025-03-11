@@ -34,6 +34,8 @@ const ExpenseAnalysis = ({ expenses }) => {
 
   // Process expense data whenever expenses change
   useEffect(() => {
+    console.log("ExpenseAnalysis received expenses:", expenses);
+
     // Group expenses by category and calculate totals
     const categoryTotals = expenses.reduce((acc, expense) => {
       const category = expense.category;
@@ -44,6 +46,8 @@ const ExpenseAnalysis = ({ expenses }) => {
       return acc;
     }, {});
 
+    console.log("Calculated category totals:", categoryTotals);
+
     // Format data for charts
     const formattedData = Object.entries(categoryTotals).map(
       ([name, value]) => ({
@@ -52,6 +56,8 @@ const ExpenseAnalysis = ({ expenses }) => {
         originalName: name, // Keep original name for color mapping
       })
     );
+
+    console.log("Formatted chart data:", formattedData);
 
     // Calculate total
     const totalAmount = formattedData.reduce(
@@ -73,6 +79,8 @@ const ExpenseAnalysis = ({ expenses }) => {
 
   // Generate color map for all categories (including custom ones)
   const getCategoryColor = (category, index) => {
+    console.log("Getting color for category:", category, "index:", index);
+
     if (BASE_COLORS[category]) {
       return BASE_COLORS[category];
     }

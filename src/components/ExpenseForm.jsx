@@ -26,7 +26,7 @@ const ExpenseForm = ({ onAddExpense }) => {
 
     // Use custom category if "other" is selected
     const finalCategory =
-      category === "other" ? customCategory.toLowerCase() : category;
+      category === "other" ? customCategory.toLowerCase().trim() : category;
 
     // Validate that custom category is provided when "other" is selected
     if (category === "other" && !customCategory.trim()) {
@@ -40,6 +40,10 @@ const ExpenseForm = ({ onAddExpense }) => {
       amount: parseFloat(amount),
       date: new Date().toISOString(),
     };
+
+    // Log for debugging
+    console.log("Adding expense with category:", finalCategory);
+    console.log("Is custom category:", category === "other");
 
     onAddExpense(newExpense);
 
