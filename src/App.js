@@ -62,54 +62,64 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-6">
+    <div className="min-h-screen bg-background p-3 sm:p-4 md:p-6">
       <div className="max-w-6xl mx-auto">
-        <header className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <header className="mb-3 sm:mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-4xl font-bold">Expense Tracker</h1>
-            <p className="text-muted-foreground mt-1">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold">
+              Expense Tracker
+            </h1>
+            <p className="text-sm sm:text-base text-muted-foreground mt-1">
               Track and visualize your spending
             </p>
           </div>
 
-          <div className="mt-4 sm:mt-0 flex flex-col sm:flex-row gap-3">
-            <div className="bg-white rounded-lg border border-gray-100 shadow-sm p-3 flex items-center">
-              <span className="text-2xl mr-2">$</span>
+          <div className="mt-3 sm:mt-0 flex flex-row sm:flex-row gap-2 sm:gap-3">
+            <div className="bg-white rounded-lg border border-gray-100 shadow-sm p-2 sm:p-3 flex items-center flex-1 sm:flex-auto">
+              <span className="text-xl sm:text-2xl mr-2">$</span>
               <div>
-                <p className="text-sm text-muted-foreground">Total:</p>
-                <p className="text-xl font-bold">${totalExpenses.toFixed(2)}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">
+                  Total:
+                </p>
+                <p className="text-lg sm:text-xl font-bold">
+                  ${totalExpenses.toFixed(2)}
+                </p>
               </div>
             </div>
 
-            <div className="bg-white rounded-lg border border-gray-100 shadow-sm p-3 flex items-center">
+            <div className="bg-white rounded-lg border border-gray-100 shadow-sm p-2 sm:p-3 flex items-center flex-1 sm:flex-auto">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
+                width="20"
+                height="20"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="mr-2 text-red-500"
+                className="mr-2 text-red-500 sm:w-6 sm:h-6"
               >
                 <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
                 <polyline points="17 6 23 6 23 12"></polyline>
               </svg>
               <div>
-                <p className="text-sm text-muted-foreground">Today:</p>
-                <p className="text-xl font-bold">${todayExpenses.toFixed(2)}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">
+                  Today:
+                </p>
+                <p className="text-lg sm:text-xl font-bold">
+                  ${todayExpenses.toFixed(2)}
+                </p>
               </div>
             </div>
           </div>
         </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="md:col-span-1">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
+          <div className="lg:col-span-1">
             <ExpenseForm onAddExpense={handleAddExpense} />
           </div>
-          <div className="md:col-span-2">
+          <div className="lg:col-span-2">
             <ExpenseAnalysis expenses={expenses} />
           </div>
         </div>

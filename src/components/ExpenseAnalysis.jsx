@@ -11,6 +11,7 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
+  Text,
 } from "recharts";
 
 const COLORS = ["#000000", "#333333", "#666666", "#999999"];
@@ -43,25 +44,27 @@ const ExpenseAnalysis = ({ expenses }) => {
 
   return (
     <Card className="h-full">
-      <CardHeader className="pb-3 flex flex-row items-center justify-between">
-        <CardTitle>Expense Analysis</CardTitle>
+      <CardHeader className="pb-2 sm:pb-3 flex flex-row items-center justify-between">
+        <CardTitle className="text-lg sm:text-xl">Expense Analysis</CardTitle>
         <Tabs className="justify-end">
           <TabsTrigger
             active={activeChart === "pie"}
             onClick={() => setActiveChart("pie")}
+            className="text-xs sm:text-sm px-2 py-1 sm:px-3 sm:py-1.5"
           >
             Pie Chart
           </TabsTrigger>
           <TabsTrigger
             active={activeChart === "bar"}
             onClick={() => setActiveChart("bar")}
+            className="text-xs sm:text-sm px-2 py-1 sm:px-3 sm:py-1.5"
           >
             Bar Chart
           </TabsTrigger>
         </Tabs>
       </CardHeader>
       <CardContent>
-        <div className="h-56">
+        <div className="h-48 sm:h-56 md:h-64">
           <ResponsiveContainer width="100%" height="100%">
             {activeChart === "pie" ? (
               <PieChart>
@@ -83,38 +86,67 @@ const ExpenseAnalysis = ({ expenses }) => {
                   ))}
                 </Pie>
                 <Tooltip formatter={(value) => `$${value.toFixed(2)}`} />
+                <text
+                  x="50%"
+                  y="48%"
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  style={{ fontSize: "14px", fontWeight: "bold", fill: "#000" }}
+                >
+                  ${total.toFixed(2)}
+                </text>
+                <text
+                  x="50%"
+                  y="58%"
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  style={{ fontSize: "12px", fill: "#666" }}
+                >
+                  Total
+                </text>
               </PieChart>
             ) : (
               <BarChart
                 data={chartData}
                 margin={{
                   top: 5,
-                  right: 30,
-                  left: 20,
+                  right: 20,
+                  left: 10,
                   bottom: 5,
                 }}
               >
-                <XAxis dataKey="name" />
-                <YAxis />
+                <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                <YAxis tick={{ fontSize: 12 }} />
                 <Tooltip formatter={(value) => `$${value.toFixed(2)}`} />
-                <Bar dataKey="value" fill="#000000" />
+                <Bar dataKey="value">
+                  {chartData.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                    />
+                  ))}
+                </Bar>
               </BarChart>
             )}
           </ResponsiveContainer>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 mt-4 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-2 sm:gap-3 mt-3 sm:mt-4 sm:grid-cols-4">
           {dataWithPercentage.map((item, index) => (
-            <div key={index} className="text-center p-2 rounded-lg">
+            <div key={index} className="text-center p-1 sm:p-2 rounded-lg">
               <div className="flex items-center justify-center mb-1">
                 <div
-                  className="w-3 h-3 rounded-full mr-2"
+                  className="w-2 h-2 sm:w-3 sm:h-3 rounded-full mr-1 sm:mr-2"
                   style={{ backgroundColor: COLORS[index % COLORS.length] }}
                 ></div>
-                <span className="font-medium">{item.name}</span>
+                <span className="text-xs sm:text-sm font-medium">
+                  {item.name}
+                </span>
               </div>
-              <div className="text-xl font-bold">${item.value}</div>
-              <div className="text-sm text-muted-foreground">
+              <div className="text-base sm:text-lg md:text-xl font-bold">
+                ${item.value}
+              </div>
+              <div className="text-xs sm:text-sm text-muted-foreground">
                 ({item.percentage}%)
               </div>
             </div>
