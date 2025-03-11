@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import ExpenseForm from "./components/ExpenseForm";
 import ExpenseAnalysis from "./components/ExpenseAnalysis";
+import RecentExpenses from "./components/RecentExpenses";
 
 // Sample initial expenses
 const initialExpenses = [
@@ -77,6 +78,20 @@ function App() {
     setExpenses([...expenses, newExpense]);
   };
 
+  // Handle updating an expense
+  const handleUpdateExpense = (updatedExpense) => {
+    const updatedExpenses = expenses.map((expense) =>
+      expense.id === updatedExpense.id ? updatedExpense : expense
+    );
+    setExpenses(updatedExpenses);
+  };
+
+  // Handle deleting an expense
+  const handleDeleteExpense = (id) => {
+    const updatedExpenses = expenses.filter((expense) => expense.id !== id);
+    setExpenses(updatedExpenses);
+  };
+
   return (
     <div className="min-h-screen bg-background p-3 sm:p-4 md:p-6">
       <div className="max-w-6xl mx-auto">
@@ -136,7 +151,14 @@ function App() {
             <ExpenseForm onAddExpense={handleAddExpense} />
           </div>
           <div className="lg:col-span-2">
-            <ExpenseAnalysis expenses={expenses} />
+            <div className="grid grid-cols-1 gap-3 sm:gap-4">
+              <ExpenseAnalysis expenses={expenses} />
+              <RecentExpenses
+                expenses={expenses}
+                onUpdateExpense={handleUpdateExpense}
+                onDeleteExpense={handleDeleteExpense}
+              />
+            </div>
           </div>
         </div>
       </div>
