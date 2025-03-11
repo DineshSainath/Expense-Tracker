@@ -28,82 +28,91 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <Card className="max-w-md w-full space-y-8">
-        <CardHeader>
-          <CardTitle className="text-center text-3xl font-bold">
-            {isLogin ? "Login" : "Sign Up"}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {!isLogin && (
+    <div className="min-h-screen flex flex-col bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="absolute top-4 left-4 sm:top-6 sm:left-6">
+        <h1 className="text-2xl sm:text-3xl font-bold font-outfit">
+          Expense Tracker
+        </h1>
+      </div>
+      <div className="flex-grow flex items-center justify-center">
+        <Card className="max-w-md w-full space-y-8">
+          <CardHeader>
+            <CardTitle className="text-center text-3xl font-bold">
+              {isLogin ? "Login" : "Sign Up"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {!isLogin && (
+                <div>
+                  <label
+                    htmlFor="name"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    Name
+                  </label>
+                  <Input
+                    id="name"
+                    type="text"
+                    required={!isLogin}
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+              )}
               <div>
                 <label
-                  htmlFor="name"
+                  htmlFor="email"
                   className="block text-sm font-medium text-gray-700"
                 >
-                  Name
+                  Email
                 </label>
                 <Input
-                  id="name"
-                  type="text"
-                  required={!isLogin}
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  id="email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="mt-1"
                 />
               </div>
-            )}
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700"
+              <div>
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Password
+                </label>
+                <Input
+                  id="password"
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+              {error && (
+                <div className="text-red-500 text-sm mt-2">{error}</div>
+              )}
+              <Button type="submit" className="w-full">
+                {isLogin ? "Login" : "Sign Up"}
+              </Button>
+            </form>
+            <div className="mt-4 text-center">
+              <button
+                onClick={() => setIsLogin(!isLogin)}
+                className="text-sm text-blue-600 hover:text-blue-800"
               >
-                Email
-              </label>
-              <Input
-                id="email"
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="mt-1"
-              />
+                {isLogin
+                  ? "Don't have an account? Sign up"
+                  : "Already have an account? Login"}
+              </button>
             </div>
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Password
-              </label>
-              <Input
-                id="password"
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="mt-1"
-              />
-            </div>
-            {error && <div className="text-red-500 text-sm mt-2">{error}</div>}
-            <Button type="submit" className="w-full">
-              {isLogin ? "Login" : "Sign Up"}
-            </Button>
-          </form>
-          <div className="mt-4 text-center">
-            <button
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-sm text-blue-600 hover:text-blue-800"
-            >
-              {isLogin
-                ? "Don't have an account? Sign up"
-                : "Already have an account? Login"}
-            </button>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
