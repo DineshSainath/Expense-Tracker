@@ -105,9 +105,13 @@ function App() {
           </div>
         </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <ExpenseForm onAddExpense={handleAddExpense} />
-          <ExpenseAnalysis expenses={expenses} />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="md:col-span-1">
+            <ExpenseForm onAddExpense={handleAddExpense} />
+          </div>
+          <div className="md:col-span-2">
+            <ExpenseAnalysis expenses={expenses} />
+          </div>
         </div>
       </div>
     </div>
