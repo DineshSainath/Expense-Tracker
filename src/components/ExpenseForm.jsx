@@ -10,17 +10,57 @@ const ExpenseForm = ({ onAddExpense }) => {
   const [customCategory, setCustomCategory] = useState("");
   const [amount, setAmount] = useState("");
   const [showCustomCategory, setShowCustomCategory] = useState(false);
+  const [errors, setErrors] = useState({
+    name: false,
+    amount: false,
+    customCategory: false,
+  });
 
   const handleCategoryChange = (e) => {
     const selectedCategory = e.target.value;
     setCategory(selectedCategory);
     setShowCustomCategory(selectedCategory === "other");
+
+    // Clear custom category error when switching away from "other"
+    if (selectedCategory !== "other") {
+      setErrors((prev) => ({ ...prev, customCategory: false }));
+    }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (!expenseName || !amount || isNaN(parseFloat(amount))) {
+    // Reset all errors
+    const newErrors = {
+      name: false,
+      amount: false,
+      customCategory: false,
+    };
+
+    // Validate inputs
+    let hasError = false;
+
+    if (!expenseName.trim()) {
+      newErrors.name = "Expense name is required";
+      hasError = true;
+    }
+
+    if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
+      newErrors.amount = "Please enter a valid amount";
+      hasError = true;
+    }
+
+    // Validate custom category when "other" is selected
+    if (category === "other" && !customCategory.trim()) {
+      newErrors.customCategory = "Please specify a category";
+      hasError = true;
+    }
+
+    // Update error state
+    setErrors(newErrors);
+
+    // Don't proceed if there are errors
+    if (hasError) {
       return;
     }
 
@@ -28,14 +68,9 @@ const ExpenseForm = ({ onAddExpense }) => {
     const finalCategory =
       category === "other" ? customCategory.toLowerCase().trim() : category;
 
-    // Validate that custom category is provided when "other" is selected
-    if (category === "other" && !customCategory.trim()) {
-      return;
-    }
-
     const newExpense = {
       id: Date.now(),
-      name: expenseName,
+      name: expenseName.trim(),
       category: finalCategory,
       amount: parseFloat(amount),
       date: new Date().toISOString(),
@@ -53,6 +88,11 @@ const ExpenseForm = ({ onAddExpense }) => {
     setCustomCategory("");
     setShowCustomCategory(false);
     setAmount("");
+    setErrors({
+      name: false,
+      amount: false,
+      customCategory: false,
+    });
   };
 
   return (
@@ -73,9 +113,19 @@ const ExpenseForm = ({ onAddExpense }) => {
               id="expense-name"
               placeholder="Coffee, Groceries, etc."
               value={expenseName}
-              onChange={(e) => setExpenseName(e.target.value)}
-              className="text-sm h-8 sm:h-10"
+              onChange={(e) => {
+                setExpenseName(e.target.value);
+                if (e.target.value.trim()) {
+                  setErrors((prev) => ({ ...prev, name: false }));
+                }
+              }}
+              className={`text-sm h-8 sm:h-10 ${
+                errors.name ? "border-red-500" : ""
+              }`}
             />
+            {errors.name && (
+              <p className="text-red-500 text-xs mt-1">{errors.name}</p>
+            )}
           </div>
 
           <div>
@@ -112,9 +162,21 @@ const ExpenseForm = ({ onAddExpense }) => {
                 id="custom-category"
                 placeholder="Enter category name"
                 value={customCategory}
-                onChange={(e) => setCustomCategory(e.target.value)}
-                className="text-sm h-8 sm:h-10"
+                onChange={(e) => {
+                  setCustomCategory(e.target.value);
+                  if (e.target.value.trim()) {
+                    setErrors((prev) => ({ ...prev, customCategory: false }));
+                  }
+                }}
+                className={`text-sm h-8 sm:h-10 ${
+                  errors.customCategory ? "border-red-500" : ""
+                }`}
               />
+              {errors.customCategory && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.customCategory}
+                </p>
+              )}
             </div>
           )}
 
@@ -133,11 +195,25 @@ const ExpenseForm = ({ onAddExpense }) => {
                 id="amount"
                 type="text"
                 placeholder="0.00"
-                className="pl-7 text-sm h-8 sm:h-10"
+                className={`pl-7 text-sm h-8 sm:h-10 ${
+                  errors.amount ? "border-red-500" : ""
+                }`}
                 value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                onChange={(e) => {
+                  setAmount(e.target.value);
+                  if (
+                    e.target.value &&
+                    !isNaN(parseFloat(e.target.value)) &&
+                    parseFloat(e.target.value) > 0
+                  ) {
+                    setErrors((prev) => ({ ...prev, amount: false }));
+                  }
+                }}
               />
             </div>
+            {errors.amount && (
+              <p className="text-red-500 text-xs mt-1">{errors.amount}</p>
+            )}
           </div>
 
           <Button

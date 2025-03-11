@@ -3,7 +3,6 @@ import { Card, CardHeader, CardTitle, CardContent } from "./ui/card";
 import { Input } from "./ui/input";
 import { Select } from "./ui/select";
 import { Button } from "./ui/button";
-import { cn } from "../lib/utils";
 
 const RecentExpenses = ({ expenses, onUpdateExpense, onDeleteExpense }) => {
   const [editingId, setEditingId] = useState(null);

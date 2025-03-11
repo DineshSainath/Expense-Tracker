@@ -66,16 +66,25 @@ function App() {
     .reduce((sum, expense) => sum + expense.amount, 0);
 
   const handleAddExpense = (newExpense) => {
-    // Create a new array with the new expense to trigger re-render
-    const updatedExpenses = [...expenses, newExpense];
+    // Validate the expense object
+    if (!newExpense.name || !newExpense.category || isNaN(newExpense.amount)) {
+      console.error("Invalid expense data:", newExpense);
+      return;
+    }
+
+    // Ensure category is a string
+    const validatedExpense = {
+      ...newExpense,
+      category: String(newExpense.category).toLowerCase().trim(),
+    };
 
     // Log for debugging
-    console.log("Added new expense:", newExpense);
-    console.log("Category type:", typeof newExpense.category);
-    console.log("Updated expenses array length:", updatedExpenses.length);
+    console.log("Added new expense:", validatedExpense);
+    console.log("Category:", validatedExpense.category);
+    console.log("Category type:", typeof validatedExpense.category);
 
     // Force a state update by creating a completely new array
-    setExpenses([...expenses, newExpense]);
+    setExpenses([...expenses, validatedExpense]);
   };
 
   // Handle updating an expense
