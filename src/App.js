@@ -133,7 +133,7 @@ function App() {
             <ExpenseForm onAddExpense={handleAddExpense} />
           </div>
           <div className="lg:col-span-2">
-            <ExpenseAnalysis key={expenses.length} expenses={expenses} />
+            <ExpenseAnalysis expenses={expenses} />
           </div>
         </div>
       </div>
