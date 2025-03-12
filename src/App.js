@@ -16,6 +16,7 @@ import {
 } from "firebase/firestore";
 import { db } from "./firebase";
 import { FaUserCircle, FaChevronDown } from "react-icons/fa";
+import { createPortal } from "react-dom";
 
 // Sample initial expenses
 const initialExpenses = [
@@ -65,6 +66,13 @@ function AppContent() {
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
 
+  // Get dropdown position for the portal
+  const [dropdownPosition, setDropdownPosition] = useState({
+    top: 0,
+    right: 0,
+  });
+  const buttonRef = useRef(null);
+
   // Save expenses to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem("expenses", JSON.stringify(expenses));
@@ -107,6 +115,17 @@ function AppContent() {
     }
     fetchExpenses();
   }, [currentUser]);
+
+  // Update dropdown position when it's shown
+  useEffect(() => {
+    if (showDropdown && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + window.scrollY,
+        right: window.innerWidth - rect.right,
+      });
+    }
+  }, [showDropdown]);
 
   const handleAddExpense = async (newExpense) => {
     try {
@@ -241,6 +260,7 @@ function AppContent() {
 
             <div className="relative animate-fadeIn animation-delay-200">
               <button
+                ref={buttonRef}
                 onClick={() => setShowDropdown(!showDropdown)}
                 className="flex items-center px-4 py-2 text-base sm:text-lg font-medium bg-black text-white rounded-full shadow-sm border border-gray-800 hover:bg-gray-800 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 font-outfit tracking-wide hover:scale-105 transition-transform"
               >
@@ -248,19 +268,27 @@ function AppContent() {
                 {currentUser.displayName}
                 <FaChevronDown className="ml-2 text-sm" />
               </button>
-              {showDropdown && (
-                <div
-                  ref={dropdownRef}
-                  className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 border border-gray-100 animate-scaleIn"
-                >
-                  <button
-                    onClick={handleLogout}
-                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font-outfit"
+              {showDropdown &&
+                createPortal(
+                  <div
+                    ref={dropdownRef}
+                    style={{
+                      position: "fixed",
+                      top: `${dropdownPosition.top}px`,
+                      right: `${dropdownPosition.right}px`,
+                      zIndex: 9999,
+                    }}
+                    className="w-48 bg-white rounded-md shadow-lg py-1 border border-gray-100 animate-scaleIn"
                   >
-                    Logout
-                  </button>
-                </div>
-              )}
+                    <button
+                      onClick={handleLogout}
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font-outfit"
+                    >
+                      Logout
+                    </button>
+                  </div>,
+                  document.body
+                )}
             </div>
 
             <div className="mt-3 sm:mt-0 flex flex-row sm:flex-row gap-2 sm:gap-3 animate-fadeIn animation-delay-300">
