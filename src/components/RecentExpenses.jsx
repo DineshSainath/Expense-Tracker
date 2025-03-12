@@ -16,6 +16,8 @@ const RecentExpenses = ({ expenses, onUpdateExpense, onDeleteExpense }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("date");
   const [sortOrder, setSortOrder] = useState("desc");
+  const [deleteInProgress, setDeleteInProgress] = useState(false);
+  const [updateInProgress, setUpdateInProgress] = useState(false);
 
   // Handle edit button click
   const handleEditClick = (expense) => {
@@ -54,53 +56,124 @@ const RecentExpenses = ({ expenses, onUpdateExpense, onDeleteExpense }) => {
   };
 
   // Handle save edit
-  const handleSaveEdit = (id) => {
-    if (
-      !editForm.name ||
-      !editForm.amount ||
-      isNaN(parseFloat(editForm.amount))
-    ) {
-      return;
+  const handleSaveEdit = async (id) => {
+    try {
+      if (updateInProgress) return;
+
+      // Validate form data
+      if (
+        !editForm.name ||
+        !editForm.amount ||
+        isNaN(parseFloat(editForm.amount))
+      ) {
+        return;
+      }
+
+      // Validate custom category if "other" is selected
+      if (editForm.category === "other" && !editForm.customCategory.trim()) {
+        return;
+      }
+
+      setUpdateInProgress(true);
+
+      // Find the original expense to get its properties
+      const originalExpense = expenses.find((exp) => exp.id === id);
+      if (!originalExpense) {
+        throw new Error("Expense not found");
+      }
+
+      // Use custom category if "other" is selected
+      const finalCategory =
+        editForm.category === "other"
+          ? editForm.customCategory.toLowerCase().trim()
+          : editForm.category;
+
+      console.log(
+        "Attempting to update expense with ID:",
+        id,
+        "Type:",
+        typeof id
+      );
+
+      // Create the updated expense object
+      const updatedExpense = {
+        id: id, // Keep the original ID
+        name: editForm.name.trim(),
+        category: finalCategory,
+        amount: parseFloat(editForm.amount),
+        date: originalExpense.date, // Keep the original date
+        userId: originalExpense.userId || "", // Keep the userId
+      };
+
+      // Call the parent component's update function
+      const success = await onUpdateExpense(updatedExpense);
+
+      // Reset state after successful update
+      if (success) {
+        console.log("Update operation was successful");
+        setEditingId(null);
+        setShowCustomCategory(false);
+      } else {
+        console.error("Update operation returned false");
+      }
+
+      setUpdateInProgress(false);
+    } catch (error) {
+      console.error("Error updating expense:", error);
+      setUpdateInProgress(false);
+      alert("Failed to update expense. Please try again.");
     }
-
-    // Use custom category if "other" is selected
-    const finalCategory =
-      editForm.category === "other"
-        ? editForm.customCategory.toLowerCase().trim()
-        : editForm.category;
-
-    // Validate that custom category is provided when "other" is selected
-    if (editForm.category === "other" && !editForm.customCategory.trim()) {
-      return;
-    }
-
-    const updatedExpense = {
-      id,
-      name: editForm.name,
-      category: finalCategory,
-      amount: parseFloat(editForm.amount),
-      date: expenses.find((exp) => exp.id === id).date, // Keep the original date
-    };
-
-    onUpdateExpense(updatedExpense);
-    setEditingId(null);
-    setShowCustomCategory(false);
   };
 
   // Handle delete expense
-  const handleDeleteExpense = (id) => {
-    if (window.confirm("Are you sure you want to delete this expense?")) {
-      onDeleteExpense(id);
+  const handleDeleteExpense = async (id) => {
+    try {
+      if (deleteInProgress) return;
+
+      if (window.confirm("Are you sure you want to delete this expense?")) {
+        setDeleteInProgress(true);
+        setEditingId(id); // Set the editing ID to track which expense is being deleted
+
+        console.log(
+          "Attempting to delete expense with ID:",
+          id,
+          "Type:",
+          typeof id
+        );
+
+        // Call the parent component's delete function
+        const success = await onDeleteExpense(id);
+
+        // Reset state after successful deletion
+        if (success) {
+          console.log("Delete operation was successful");
+          setEditingId(null);
+        } else {
+          console.error("Delete operation returned false");
+        }
+
+        setDeleteInProgress(false);
+      }
+    } catch (error) {
+      console.error("Error deleting expense:", error);
+      setDeleteInProgress(false);
+      setEditingId(null);
+      alert("Failed to delete expense. Please try again.");
     }
   };
 
-  // Predefined categories
+  // Predefined categories with icons
   const predefinedCategories = {
-    food: "Food",
-    transport: "Transport",
-    entertainment: "Entertainment",
-    utilities: "Utilities",
-    shopping: "Shopping",
+    food: "🍔",
+    transport: "🚗",
+    entertainment: "🎬",
+    utilities: "💡",
+    shopping: "🛍️",
+  };
+
+  // Get category icon
+  const getCategoryIcon = (category) => {
+    return predefinedCategories[category] || "📝";
   };
 
   // Format date for display
@@ -115,305 +188,209 @@ const RecentExpenses = ({ expenses, onUpdateExpense, onDeleteExpense }) => {
 
   // Filter and sort expenses
   const filteredExpenses = expenses
-    .filter(
-      (expense) =>
+    .filter((expense) => {
+      if (!searchTerm) return true;
+      return (
         expense.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         expense.category.toLowerCase().includes(searchTerm.toLowerCase())
-    )
+      );
+    })
     .sort((a, b) => {
       if (sortBy === "date") {
-        return sortOrder === "desc"
-          ? new Date(b.date) - new Date(a.date)
-          : new Date(a.date) - new Date(b.date);
+        return sortOrder === "asc"
+          ? new Date(a.date) - new Date(b.date)
+          : new Date(b.date) - new Date(a.date);
       } else if (sortBy === "amount") {
-        return sortOrder === "desc" ? b.amount - a.amount : a.amount - b.amount;
+        return sortOrder === "asc" ? a.amount - b.amount : b.amount - a.amount;
       } else if (sortBy === "name") {
-        return sortOrder === "desc"
-          ? b.name.localeCompare(a.name)
-          : a.name.localeCompare(b.name);
+        return sortOrder === "asc"
+          ? a.name.localeCompare(b.name)
+          : b.name.localeCompare(a.name);
       }
       return 0;
     });
 
   return (
-    <Card className="h-full">
-      <CardHeader className="pb-2 sm:pb-3 flex flex-row items-center justify-between">
-        <CardTitle className="text-lg sm:text-xl">Recent Expenses</CardTitle>
-        <div className="flex items-center space-x-2">
-          <div className="relative w-32 sm:w-40">
+    <Card className="shadow-sm hover:shadow-md transition-shadow duration-300">
+      <CardHeader className="animate-fadeIn">
+        <CardTitle className="text-xl sm:text-2xl font-bold">
+          Recent Expenses
+        </CardTitle>
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-2">
+          <div className="relative flex-grow animate-slideInLeft animation-delay-100">
             <Input
-              placeholder="Search..."
+              type="text"
+              placeholder="Search expenses..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="text-xs sm:text-sm h-7 sm:h-8 sm:h-9 pl-7"
+              className="w-full"
             />
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400"
-            >
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
           </div>
-          <div className="flex items-center">
-            <div className="relative">
-              <Select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="text-xs sm:text-sm h-7 sm:h-9 w-24 sm:w-28 px-2 appearance-none"
-                style={{ paddingRight: "24px" }}
-              >
-                <option value="date">Date</option>
-                <option value="amount">Amount</option>
-                <option value="name">Name</option>
-              </Select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2">
-                <svg
-                  className="h-4 w-4 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M19 9l-7 7-7-7"
-                  ></path>
-                </svg>
-              </div>
-            </div>
-            <button
-              onClick={() =>
-                setSortOrder(sortOrder === "desc" ? "asc" : "desc")
-              }
-              className="ml-1 p-1 rounded hover:bg-gray-100"
+          <div className="flex gap-2 animate-slideInRight animation-delay-200">
+            <Select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="w-24 sm:w-28"
             >
-              {sortOrder === "desc" ? (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="m3 8 4-4 4 4"></path>
-                  <path d="M7 4v16"></path>
-                  <path d="M11 12h4"></path>
-                  <path d="M11 16h7"></path>
-                  <path d="M11 20h10"></path>
-                </svg>
-              ) : (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="m3 16 4 4 4-4"></path>
-                  <path d="M7 20V4"></path>
-                  <path d="M11 4h10"></path>
-                  <path d="M11 8h7"></path>
-                  <path d="M11 12h4"></path>
-                </svg>
-              )}
-            </button>
+              <option value="date">Date</option>
+              <option value="amount">Amount</option>
+              <option value="name">Name</option>
+            </Select>
+            <Button
+              onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+              className="px-2 hover:scale-105 transition-transform duration-200"
+            >
+              {sortOrder === "asc" ? "↑" : "↓"}
+            </Button>
           </div>
         </div>
       </CardHeader>
       <CardContent>
-        <div className="overflow-y-auto max-h-[400px] pr-1">
+        <div className="space-y-3">
           {filteredExpenses.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              No expenses found
+            <div className="text-center py-6 text-gray-500 animate-fadeIn">
+              No expenses found.
             </div>
           ) : (
-            <ul className="space-y-2">
-              {filteredExpenses.map((expense) => (
-                <li
-                  key={expense.id}
-                  className="bg-white border border-gray-100 rounded-lg shadow-sm p-3 transition-all hover:shadow-md"
-                >
-                  {editingId === expense.id ? (
-                    <div className="space-y-2">
-                      <div className="flex items-center space-x-2">
-                        <Input
-                          value={editForm.name}
-                          onChange={(e) =>
-                            setEditForm({ ...editForm, name: e.target.value })
-                          }
-                          placeholder="Expense name"
-                          className="text-sm h-8"
-                        />
-                        <div className="relative w-24 sm:w-28">
-                          <div className="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
-                            <span className="text-gray-500 text-xs sm:text-sm">
-                              ₹
-                            </span>
-                          </div>
-                          <Input
-                            value={editForm.amount}
-                            onChange={(e) =>
-                              setEditForm({
-                                ...editForm,
-                                amount: e.target.value,
-                              })
-                            }
-                            placeholder="0.00"
-                            className="pl-5 text-sm h-8"
-                          />
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <div className="relative flex-grow">
-                          <Select
-                            value={editForm.category}
-                            onChange={handleCategoryChange}
-                            className="text-sm h-10 w-full px-2 appearance-none"
-                            style={{ paddingRight: "24px" }}
-                          >
-                            {Object.entries(predefinedCategories).map(
-                              ([value, label]) => (
-                                <option key={value} value={value}>
-                                  {label}
-                                </option>
-                              )
-                            )}
-                            <option value="other">Other...</option>
-                          </Select>
-                          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2">
-                            <svg
-                              className="h-4 w-4 text-gray-400"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M19 9l-7 7-7-7"
-                              ></path>
-                            </svg>
-                          </div>
-                        </div>
-                        {showCustomCategory && (
-                          <Input
-                            value={editForm.customCategory}
-                            onChange={(e) =>
-                              setEditForm({
-                                ...editForm,
-                                customCategory: e.target.value,
-                              })
-                            }
-                            placeholder="Custom category"
-                            className="text-sm h-9 flex-grow"
-                          />
-                        )}
-                      </div>
-                      <div className="flex justify-end space-x-2 mt-2">
-                        <Button
-                          onClick={handleCancelEdit}
-                          className="h-7 text-xs px-3"
-                          variant="outline"
-                        >
-                          Cancel
-                        </Button>
-                        <Button
-                          onClick={() => handleSaveEdit(expense.id)}
-                          className="h-7 text-xs px-3"
-                        >
-                          Save
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
+            filteredExpenses.map((expense, index) => (
+              <div
+                key={expense.id}
+                className={`bg-white border rounded-lg p-3 ${
+                  editingId === expense.id
+                    ? "border-blue-300 shadow-md"
+                    : "border-gray-200 hover:border-gray-300 hover:shadow-sm"
+                } transition-all duration-200 animate-slideInLeft`}
+                style={{ animationDelay: `${index * 50}ms` }}
+              >
+                {editingId === expense.id ? (
+                  <div className="space-y-3 animate-fadeIn">
                     <div>
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h4 className="font-medium text-sm sm:text-base">
-                            {expense.name}
-                          </h4>
-                          <div className="flex items-center mt-1">
-                            <span className="inline-block px-2 py-0.5 text-xs rounded-full bg-black text-white capitalize">
-                              {expense.category}
-                            </span>
-                            <span className="text-xs text-gray-500 ml-2">
-                              {formatDate(expense.date)}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="flex flex-col items-end">
-                          <span className="font-bold text-sm sm:text-base">
-                            ₹{expense.amount.toFixed(2)}
-                          </span>
-                          <div className="flex mt-1">
-                            <button
-                              onClick={() => handleEditClick(expense)}
-                              className="p-1 text-gray-500 hover:text-gray-700"
-                              aria-label="Edit expense"
-                            >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="14"
-                                height="14"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path>
-                                <path d="m15 5 4 4"></path>
-                              </svg>
-                            </button>
-                            <button
-                              onClick={() => handleDeleteExpense(expense.id)}
-                              className="p-1 text-gray-500 hover:text-red-500 ml-1"
-                              aria-label="Delete expense"
-                            >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="14"
-                                height="14"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M3 6h18"></path>
-                                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-                                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                              </svg>
-                            </button>
-                          </div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Name
+                      </label>
+                      <Input
+                        type="text"
+                        value={editForm.name}
+                        onChange={(e) =>
+                          setEditForm({ ...editForm, name: e.target.value })
+                        }
+                        className="w-full"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Category
+                      </label>
+                      <Select
+                        value={editForm.category}
+                        onChange={handleCategoryChange}
+                        className="w-full"
+                      >
+                        {Object.entries(predefinedCategories).map(
+                          ([key, icon]) => (
+                            <option key={key} value={key}>
+                              {icon}{" "}
+                              {key.charAt(0).toUpperCase() + key.slice(1)}
+                            </option>
+                          )
+                        )}
+                        <option value="other">➕ Other</option>
+                      </Select>
+                    </div>
+                    {showCustomCategory && (
+                      <div className="animate-slideUpFade">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Custom Category
+                        </label>
+                        <Input
+                          type="text"
+                          value={editForm.customCategory}
+                          onChange={(e) =>
+                            setEditForm({
+                              ...editForm,
+                              customCategory: e.target.value,
+                            })
+                          }
+                          className="w-full"
+                          placeholder="e.g., Healthcare"
+                        />
+                      </div>
+                    )}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Amount (₹)
+                      </label>
+                      <Input
+                        type="number"
+                        value={editForm.amount}
+                        onChange={(e) =>
+                          setEditForm({ ...editForm, amount: e.target.value })
+                        }
+                        className="w-full"
+                        step="0.01"
+                        min="0"
+                      />
+                    </div>
+                    <div className="flex justify-end space-x-2 pt-2">
+                      <Button
+                        onClick={handleCancelEdit}
+                        className="bg-gray-200 text-gray-800 hover:bg-gray-300 hover:scale-105 transition-all duration-200"
+                        disabled={updateInProgress}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={() => handleSaveEdit(expense.id)}
+                        className="hover:scale-105 transition-transform duration-200"
+                        disabled={updateInProgress}
+                      >
+                        {updateInProgress ? "Updating..." : "Save"}
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start space-x-3">
+                      <div className="text-2xl mt-1">
+                        {getCategoryIcon(expense.category)}
+                      </div>
+                      <div>
+                        <h3 className="font-medium">{expense.name}</h3>
+                        <div className="flex flex-col sm:flex-row sm:items-center text-sm text-gray-500 gap-1 sm:gap-2">
+                          <span className="capitalize">{expense.category}</span>
+                          <span className="hidden sm:inline">•</span>
+                          <span>{formatDate(expense.date)}</span>
                         </div>
                       </div>
                     </div>
-                  )}
-                </li>
-              ))}
-            </ul>
+                    <div className="flex flex-col items-end">
+                      <div className="font-semibold">
+                        ₹{expense.amount.toFixed(2)}
+                      </div>
+                      <div className="flex space-x-1 mt-1">
+                        <button
+                          onClick={() => handleEditClick(expense)}
+                          className="text-blue-600 hover:text-blue-800 text-sm hover:scale-110 transition-transform duration-200"
+                          disabled={deleteInProgress || updateInProgress}
+                        >
+                          Edit
+                        </button>
+                        <span className="text-gray-300">|</span>
+                        <button
+                          onClick={() => handleDeleteExpense(expense.id)}
+                          className="text-red-600 hover:text-red-800 text-sm hover:scale-110 transition-transform duration-200"
+                          disabled={deleteInProgress || updateInProgress}
+                        >
+                          {deleteInProgress && expense.id === editingId
+                            ? "Deleting..."
+                            : "Delete"}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))
           )}
         </div>
       </CardContent>

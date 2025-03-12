@@ -13,17 +13,17 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-// Base colors for predefined categories
+// Base colors for predefined categories - using more distinct colors
 const BASE_COLORS = {
-  food: "#000000",
-  transport: "#333333",
-  entertainment: "#666666",
-  utilities: "#999999",
-  shopping: "#555555",
+  food: "#000000", // Black
+  transport: "#0066CC", // Blue
+  entertainment: "#CC3300", // Red
+  utilities: "#339933", // Green
+  shopping: "#9933CC", // Purple
 };
 
 // Additional colors for dynamic categories
-const EXTRA_COLORS = ["#777777", "#888888", "#444444", "#222222", "#AAAAAA"];
+const EXTRA_COLORS = ["#FF9900", "#FF6600", "#6699CC", "#669966", "#CC6699"];
 
 const ExpenseAnalysis = ({ expenses }) => {
   const [activeChart, setActiveChart] = useState("pie");
@@ -33,7 +33,10 @@ const ExpenseAnalysis = ({ expenses }) => {
 
   // Process expense data whenever expenses change
   useEffect(() => {
-    console.log("ExpenseAnalysis received expenses:", expenses);
+    console.log(
+      "ExpenseAnalysis: Processing updated expenses data",
+      expenses.length
+    );
 
     // Group expenses by category and calculate totals
     const categoryTotals = expenses.reduce((acc, expense) => {
@@ -45,8 +48,6 @@ const ExpenseAnalysis = ({ expenses }) => {
       return acc;
     }, {});
 
-    console.log("Calculated category totals:", categoryTotals);
-
     // Format data for charts
     const formattedData = Object.entries(categoryTotals).map(
       ([name, value]) => ({
@@ -55,8 +56,6 @@ const ExpenseAnalysis = ({ expenses }) => {
         originalName: name, // Keep original name for color mapping
       })
     );
-
-    console.log("Formatted chart data:", formattedData);
 
     // Calculate total
     const totalAmount = formattedData.reduce(
@@ -78,8 +77,6 @@ const ExpenseAnalysis = ({ expenses }) => {
 
   // Generate color map for all categories (including custom ones)
   const getCategoryColor = (category, index) => {
-    console.log("Getting color for category:", category, "index:", index);
-
     if (BASE_COLORS[category]) {
       return BASE_COLORS[category];
     }
@@ -91,9 +88,11 @@ const ExpenseAnalysis = ({ expenses }) => {
   const formatTooltipValue = (value) => `₹${value.toFixed(2)}`;
 
   return (
-    <Card className="h-full">
-      <CardHeader className="pb-2 sm:pb-3 flex flex-row items-center justify-between">
-        <CardTitle className="text-lg sm:text-xl">Expense Analysis</CardTitle>
+    <Card className="h-full shadow-sm hover:shadow-md transition-shadow duration-300">
+      <CardHeader className="pb-2 sm:pb-3 flex flex-row items-center justify-between animate-fadeIn">
+        <CardTitle className="text-xl sm:text-2xl font-bold">
+          Expense Analysis
+        </CardTitle>
         <Tabs className="justify-end">
           <TabsTrigger
             active={activeChart === "pie"}
@@ -111,9 +110,13 @@ const ExpenseAnalysis = ({ expenses }) => {
           </TabsTrigger>
         </Tabs>
       </CardHeader>
-      <CardContent>
+      <CardContent className="animate-fadeIn animation-delay-100">
         <div className="h-48 sm:h-56 md:h-64">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer
+            width="100%"
+            height="100%"
+            key={`chart-container-${expenses.length}-${total}`}
+          >
             {activeChart === "pie" ? (
               <PieChart>
                 <Pie
@@ -128,7 +131,7 @@ const ExpenseAnalysis = ({ expenses }) => {
                 >
                   {chartData.map((entry, index) => (
                     <Cell
-                      key={`cell-${index}`}
+                      key={`cell-${index}-${entry.value}`}
                       fill={getCategoryColor(entry.originalName, index)}
                     />
                   ))}
@@ -177,7 +180,7 @@ const ExpenseAnalysis = ({ expenses }) => {
                 <Bar dataKey="value">
                   {chartData.map((entry, index) => (
                     <Cell
-                      key={`cell-${index}`}
+                      key={`cell-${index}-${entry.value}`}
                       fill={getCategoryColor(entry.originalName, index)}
                     />
                   ))}
@@ -187,26 +190,25 @@ const ExpenseAnalysis = ({ expenses }) => {
           </ResponsiveContainer>
         </div>
 
-        <div className="grid grid-cols-2 gap-2 sm:gap-3 mt-3 sm:mt-4 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 mt-4 sm:grid-cols-3 animate-fadeIn animation-delay-200">
           {dataWithPercentage.map((item, index) => (
-            <div key={index} className="text-center p-1 sm:p-2 rounded-lg">
-              <div className="flex items-center justify-center mb-1">
+            <div
+              key={`category-${item.originalName}-${item.value}`}
+              className="flex flex-col items-center p-2 rounded-lg border border-gray-100"
+            >
+              <div className="flex items-center mb-1">
                 <div
-                  className="w-2 h-2 sm:w-3 sm:h-3 rounded-full mr-1 sm:mr-2"
+                  className="w-4 h-4 rounded-full mr-2"
                   style={{
                     backgroundColor: getCategoryColor(item.originalName, index),
                   }}
                 ></div>
-                <span className="text-xs sm:text-sm font-medium">
+                <span className="text-sm font-medium capitalize">
                   {item.name}
                 </span>
               </div>
-              <div className="text-base sm:text-lg md:text-xl font-bold">
-                ₹{item.value}
-              </div>
-              <div className="text-xs sm:text-sm text-muted-foreground">
-                ({item.percentage}%)
-              </div>
+              <div className="text-lg font-bold">₹{item.value}</div>
+              <div className="text-xs text-gray-500">({item.percentage}%)</div>
             </div>
           ))}
         </div>

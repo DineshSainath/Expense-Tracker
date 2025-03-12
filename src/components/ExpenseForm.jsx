@@ -27,7 +27,7 @@ const ExpenseForm = ({ onAddExpense }) => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     // Reset all errors
@@ -50,88 +50,96 @@ const ExpenseForm = ({ onAddExpense }) => {
       hasError = true;
     }
 
-    // Validate custom category when "other" is selected
     if (category === "other" && !customCategory.trim()) {
-      newErrors.customCategory = "Please specify a category";
+      newErrors.customCategory = "Custom category is required";
       hasError = true;
     }
 
-    // Update error state
-    setErrors(newErrors);
-
-    // Don't proceed if there are errors
     if (hasError) {
+      setErrors(newErrors);
       return;
     }
 
-    // Use custom category if "other" is selected
-    const finalCategory =
-      category === "other" ? customCategory.toLowerCase().trim() : category;
+    try {
+      // Create new expense object
+      const newExpense = {
+        id: Date.now().toString(), // Use timestamp as temporary ID (as string)
+        name: expenseName,
+        category:
+          category === "other" ? customCategory.toLowerCase() : category,
+        amount: parseFloat(amount),
+        date: new Date().toISOString(),
+      };
 
-    const newExpense = {
-      id: Date.now(),
-      name: expenseName.trim(),
-      category: finalCategory,
-      amount: parseFloat(amount),
-      date: new Date().toISOString(),
-    };
+      // Call the parent component's function to add the expense
+      await onAddExpense(newExpense);
 
-    // Log for debugging
-    console.log("Adding expense with category:", finalCategory);
-    console.log("Is custom category:", category === "other");
+      // Reset form
+      setExpenseName("");
+      setCategory("food");
+      setCustomCategory("");
+      setAmount("");
+      setShowCustomCategory(false);
+      setErrors({
+        name: false,
+        amount: false,
+        customCategory: false,
+      });
 
-    onAddExpense(newExpense);
+      console.log("New expense added successfully");
+    } catch (error) {
+      console.error("Error adding expense:", error);
+      alert("Failed to add expense. Please try again.");
+    }
+  };
 
-    // Reset form
-    setExpenseName("");
-    setCategory("food");
-    setCustomCategory("");
-    setShowCustomCategory(false);
-    setAmount("");
-    setErrors({
-      name: false,
-      amount: false,
-      customCategory: false,
-    });
+  // Predefined categories with icons
+  const predefinedCategories = {
+    food: "🍔 Food",
+    transport: "🚗 Transport",
+    entertainment: "🎬 Entertainment",
+    utilities: "💡 Utilities",
+    shopping: "🛍️ Shopping",
+    other: "➕ Other",
   };
 
   return (
-    <Card className="overflow-hidden" style={{ height: "auto" }}>
-      <CardHeader className="pb-2 sm:pb-3">
-        <CardTitle className="text-lg sm:text-xl">Add New Expense</CardTitle>
+    <Card className="shadow-sm hover:shadow-md transition-shadow duration-300">
+      <CardHeader className="animate-fadeIn">
+        <CardTitle className="text-xl sm:text-2xl font-bold">
+          Add New Expense
+        </CardTitle>
       </CardHeader>
-      <CardContent className="pb-4">
-        <form onSubmit={handleSubmit} className="space-y-2 sm:space-y-3">
-          <div>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="animate-slideUpFade">
             <label
               htmlFor="expense-name"
-              className="block text-xs sm:text-sm font-medium mb-1"
+              className="block text-sm font-medium text-gray-700 mb-1"
             >
               Expense Name
             </label>
             <Input
               id="expense-name"
-              placeholder="Coffee, Groceries, etc."
+              type="text"
               value={expenseName}
-              onChange={(e) => {
-                setExpenseName(e.target.value);
-                if (e.target.value.trim()) {
-                  setErrors((prev) => ({ ...prev, name: false }));
-                }
-              }}
-              className={`text-sm h-8 sm:h-10 ${
-                errors.name ? "border-red-500" : ""
+              onChange={(e) => setExpenseName(e.target.value)}
+              className={`w-full ${
+                errors.name ? "border-red-500 focus:ring-red-500" : ""
               }`}
+              placeholder="e.g., Groceries"
             />
             {errors.name && (
-              <p className="text-red-500 text-xs mt-1">{errors.name}</p>
+              <p className="mt-1 text-sm text-red-500 animate-pulse">
+                {errors.name}
+              </p>
             )}
           </div>
 
-          <div>
+          <div className="animate-slideUpFade animation-delay-100">
             <label
               htmlFor="category"
-              className="block text-xs sm:text-sm font-medium mb-1"
+              className="block text-sm font-medium text-gray-700 mb-1"
             >
               Category
             </label>
@@ -139,102 +147,76 @@ const ExpenseForm = ({ onAddExpense }) => {
               id="category"
               value={category}
               onChange={handleCategoryChange}
-              className="text-sm h-8 sm:h-10"
+              className={`w-full ${
+                errors.category ? "border-red-500 focus:ring-red-500" : ""
+              }`}
             >
-              <option value="food">Food</option>
-              <option value="transport">Transport</option>
-              <option value="entertainment">Entertainment</option>
-              <option value="utilities">Utilities</option>
-              <option value="shopping">Shopping</option>
-              <option value="other">Other...</option>
+              {Object.entries(predefinedCategories).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
             </Select>
           </div>
 
           {showCustomCategory && (
-            <div>
+            <div className="animate-slideUpFade">
               <label
                 htmlFor="custom-category"
-                className="block text-xs sm:text-sm font-medium mb-1"
+                className="block text-sm font-medium text-gray-700 mb-1"
               >
                 Custom Category
               </label>
               <Input
                 id="custom-category"
-                placeholder="Enter category name"
+                type="text"
                 value={customCategory}
-                onChange={(e) => {
-                  setCustomCategory(e.target.value);
-                  if (e.target.value.trim()) {
-                    setErrors((prev) => ({ ...prev, customCategory: false }));
-                  }
-                }}
-                className={`text-sm h-8 sm:h-10 ${
-                  errors.customCategory ? "border-red-500" : ""
+                onChange={(e) => setCustomCategory(e.target.value)}
+                className={`w-full ${
+                  errors.customCategory
+                    ? "border-red-500 focus:ring-red-500"
+                    : ""
                 }`}
+                placeholder="e.g., Healthcare"
               />
               {errors.customCategory && (
-                <p className="text-red-500 text-xs mt-1">
+                <p className="mt-1 text-sm text-red-500 animate-pulse">
                   {errors.customCategory}
                 </p>
               )}
             </div>
           )}
 
-          <div>
+          <div className="animate-slideUpFade animation-delay-200">
             <label
               htmlFor="amount"
-              className="block text-xs sm:text-sm font-medium mb-1"
+              className="block text-sm font-medium text-gray-700 mb-1"
             >
-              Amount
+              Amount (₹)
             </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <span className="text-gray-500 text-xs sm:text-sm">₹</span>
-              </div>
-              <Input
-                id="amount"
-                type="text"
-                placeholder="0.00"
-                className={`pl-7 text-sm h-8 sm:h-10 ${
-                  errors.amount ? "border-red-500" : ""
-                }`}
-                value={amount}
-                onChange={(e) => {
-                  setAmount(e.target.value);
-                  if (
-                    e.target.value &&
-                    !isNaN(parseFloat(e.target.value)) &&
-                    parseFloat(e.target.value) > 0
-                  ) {
-                    setErrors((prev) => ({ ...prev, amount: false }));
-                  }
-                }}
-              />
-            </div>
+            <Input
+              id="amount"
+              type="number"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              className={`w-full ${
+                errors.amount ? "border-red-500 focus:ring-red-500" : ""
+              }`}
+              placeholder="0.00"
+              step="0.01"
+              min="0"
+            />
             {errors.amount && (
-              <p className="text-red-500 text-xs mt-1">{errors.amount}</p>
+              <p className="mt-1 text-sm text-red-500 animate-pulse">
+                {errors.amount}
+              </p>
             )}
           </div>
 
           <Button
             type="submit"
-            className="w-full h-8 sm:h-10 text-xs sm:text-sm mt-1 sm:mt-2"
+            className="w-full animate-fadeIn animation-delay-300 hover:scale-105 transition-transform duration-200"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="mr-1 sm:mr-2 sm:w-4 sm:h-4"
-            >
-              <path d="M12 5v14"></path>
-              <path d="M5 12h14"></path>
-            </svg>
             Add Expense
           </Button>
         </form>
