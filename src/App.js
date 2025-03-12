@@ -56,15 +56,6 @@ const initialExpenses = [
   },
 ];
 
-// Predefined categories with icons
-const predefinedCategories = {
-  food: "🍔",
-  transport: "🚗",
-  entertainment: "🎬",
-  utilities: "💡",
-  shopping: "🛍️",
-};
-
 function AppContent() {
   const { currentUser, logout } = useAuth();
   const [expenses, setExpenses] = useState(() => {
@@ -116,18 +107,6 @@ function AppContent() {
     }
     fetchExpenses();
   }, [currentUser]);
-
-  // Calculate total expenses
-  const totalExpenses = expenses.reduce(
-    (sum, expense) => sum + expense.amount,
-    0
-  );
-
-  // Calculate today's expenses
-  const today = new Date().toISOString().split("T")[0];
-  const todayExpenses = expenses
-    .filter((expense) => expense.date.split("T")[0] === today)
-    .reduce((sum, expense) => sum + expense.amount, 0);
 
   const handleAddExpense = async (newExpense) => {
     try {
